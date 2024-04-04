@@ -26,7 +26,10 @@ to publish a new version push a new tag to main:
   uses: apegroup/delete-old-package-versions@v0.0.13
   with:
     package-names: ${{ env.PACKAGE_NAMES }}
-    min-versions-to-keep: 10 # Keep the 10 most recent releases.
     package-type: maven
     token: ${{ secrets.GITHUB_TOKEN }}
+
+    # you can only set one of these two
+    min-versions-to-keep: 10 # Keep the 10 most recent releases.
+    version-to-delete: '1.0.0' # delete only version 1.0.0
 ```
