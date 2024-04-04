@@ -14,7 +14,12 @@ inputs:
       Number of versions to keep starting with the latest version
       By default keeps no version.
       To delete all versions set this as 0.
-    required: true
+    required: false
+
+  version-to-delete:
+    description: >
+      exact version name you want to delete
+    required: false
 
   package-type:
     description: >

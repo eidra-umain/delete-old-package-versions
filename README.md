@@ -1,8 +1,9 @@
 
 # Delete Old Package Versions
 
-Deletes all versions of the packages defined by the "package-names" besides the "min-versions-to-keep"
-
+this package can do two things
+* delete all versions of packages defined in "package-names" except for the "min-versions-to-keep"
+* delete a specific "version-to-delete" for packages defined in "package-names" 
 
 
 ## Installation

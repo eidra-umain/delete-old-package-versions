@@ -5,11 +5,24 @@ const paginate = require('@octokit/plugin-paginate-rest')
 
 async function run() {
     try {
-        // get all input parameters
+        // get all required input parameters
         const packageNames = core.getInput('package-names').split(",").map(p => p.trim())
-        const minVersionsToKeep = Number(core.getInput('min-versions-to-keep'))
         const token = core.getInput('token')
         const packageType = core.getInput('package-type')
+
+        // get all optional input parameters
+        const minVersionsToKeep = core.getInput('min-versions-to-keep') ? Number(core.getInput('min-versions-to-keep')) : null
+        const versionToDelete = core.getInput('version-to-delete')
+
+        // if both minVersionsToKeep and versionToDelete are null, stop the execution
+        if(minVersionsToKeep == null && versionToDelete == null) {
+            return core.setFailed("either 'min-versions-to-keep' or 'version-to-delete' needs to be defined")
+        }
+
+        // if both minVersionsToKeep and versionToDelete are defined, stop the execution
+        if(minVersionsToKeep != null && versionToDelete != null) {
+            return core.setFailed("either 'min-versions-to-keep' or 'version-to-delete' should be defined")
+        }
 
         // initialize github octokit api
         const MyOctokit = octokitCore.Octokit.plugin(paginate.paginateRest);
@@ -33,7 +46,7 @@ async function run() {
         for (const repoPackage of packagesThatMatchNames) {
 
             // fetch all the versiobs of this package
-            const versions = await octokit.paginate('GET /orgs/{org}/packages/{package_type}/{package_name}/versions', {
+            let versions = await octokit.paginate('GET /orgs/{org}/packages/{package_type}/{package_name}/versions', {
                 org: owner,
                 package_type: packageType,
                 package_name: repoPackage.name,
@@ -41,9 +54,21 @@ async function run() {
             });
 
             // select all but the X most recent package versions
-            versions.splice(0, minVersionsToKeep);
-            console.info(`deleting ${versions.length} versions for package "${repoPackage.name}"`)
+            if(minVersionsToKeep != null) {
+                versions.splice(0, minVersionsToKeep);
+                console.info(`deleting ${versions.length} versions for package "${repoPackage.name}"`)
+            }
 
+            // select only the specific version to delete
+            else if(versionToDelete != null) {
+                versions = versions.filter((version) => version.name === versionToDelete);
+                console.info(`deleting ${versions.length} versions for package "${repoPackage.name}"`)
+            }
+
+            // neither are defined, to prevent all versions from being deleted, stop the execution
+            else {
+                return core.setFailed("both 'min-versions-to-keep' and 'version-to-delete' were defined")
+            }
 
             // delete all package versions we dont want to keep
             const deletableVersionPromises = versions.map(version => {
