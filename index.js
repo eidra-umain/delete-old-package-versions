@@ -5,7 +5,7 @@ const paginate = require('@octokit/plugin-paginate-rest')
 
 
 function hasValue(string) {
-    return string != null && string.trim().length != 0
+    return string !== null && string !== undefined && string.trim().length !== 0
 }
 
 async function run() {
