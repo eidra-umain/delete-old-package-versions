@@ -3,6 +3,11 @@ const github = require('@actions/github')
 const octokitCore = require('@octokit/core')
 const paginate = require('@octokit/plugin-paginate-rest')
 
+
+function hasValue(string) {
+    return string != null && string.trim().length != 0
+}
+
 async function run() {
     try {
         // get all required input parameters
@@ -15,12 +20,12 @@ async function run() {
         const versionToDelete = core.getInput('version-to-delete')
 
         // if both minVersionsToKeep and versionToDelete are null, stop the execution
-        if(minVersionsToKeep == null && versionToDelete == null) {
+        if(!hasValue(minVersionsToKeep) && !hasValue(versionToDelete)) {
             return core.setFailed("either 'min-versions-to-keep' or 'version-to-delete' needs to be defined")
         }
 
         // if both minVersionsToKeep and versionToDelete are defined, stop the execution
-        if(minVersionsToKeep != null && versionToDelete != null) {
+        if(hasValue(minVersionsToKeep) && hasValue(versionToDelete)) {
             return core.setFailed("either 'min-versions-to-keep' or 'version-to-delete' should be defined")
         }
 
