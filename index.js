@@ -2,15 +2,6 @@ const core = require('@actions/core')
 const github = require('@actions/github')
 const octokitCore = require('@octokit/core')
 const paginate = require('@octokit/plugin-paginate-rest')
-
-/**
- * @param {string} version
- * @return boolean
- */
-function hasValue(version) {
-    return version.trim().length !== 0
-}
-
 async function run() {
     try {
         // get all required input parameters
@@ -19,16 +10,19 @@ async function run() {
         const packageType = core.getInput('package-type')
 
         // get all optional input parameters
-        const minVersionsToKeep = core.getInput('min-versions-to-keep')
-        const versionToDelete = core.getInput('version-to-delete')
+        const _minVersionsToKeep = core.getInput('min-versions-to-keep')
+        const _versionToDelete = core.getInput('version-to-delete')
+
+        const minVersionsToKeep = _minVersionsToKeep.trim().length === 0 ? null : _minVersionsToKeep
+        const versionToDelete = _versionToDelete.trim().length === 0 ? null : _versionToDelete
 
         // if both minVersionsToKeep and versionToDelete are null, stop the execution
-        if(!hasValue(minVersionsToKeep) && !hasValue(versionToDelete)) {
+        if(!minVersionsToKeep && !versionToDelete) {
             return core.setFailed("either 'min-versions-to-keep' or 'version-to-delete' needs to be defined")
         }
 
         // if both minVersionsToKeep and versionToDelete are defined, stop the execution
-        if(hasValue(minVersionsToKeep) && hasValue(versionToDelete)) {
+        if(minVersionsToKeep && versionToDelete) {
             return core.setFailed("either 'min-versions-to-keep' or 'version-to-delete' should be defined")
         }
 
@@ -62,13 +56,13 @@ async function run() {
             });
 
             // select all but the X most recent package versions
-            if(minVersionsToKeep != null) {
-                versions.splice(0, minVersionsToKeep);
+            if(minVersionsToKeep !== null) {
+                versions.splice(0, parseInt(minVersionsToKeep, 10));
                 console.info(`deleting ${versions.length} versions for package "${repoPackage.name}"`)
             }
 
             // select only the specific version to delete
-            else if(versionToDelete != null) {
+            else if(versionToDelete !== null) {
                 versions = versions.filter((version) => version.name === versionToDelete);
                 console.info(`deleting ${versions.length} versions for package "${repoPackage.name}"`)
             }
