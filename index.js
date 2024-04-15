@@ -3,9 +3,12 @@ const github = require('@actions/github')
 const octokitCore = require('@octokit/core')
 const paginate = require('@octokit/plugin-paginate-rest')
 
-
-function hasValue(string) {
-    return string !== null && string !== undefined && string.trim().length !== 0
+/**
+ * @param {string} version
+ * @return boolean
+ */
+function hasValue(version) {
+    return version.trim().length !== 0
 }
 
 async function run() {
@@ -16,7 +19,7 @@ async function run() {
         const packageType = core.getInput('package-type')
 
         // get all optional input parameters
-        const minVersionsToKeep = core.getInput('min-versions-to-keep') ? Number(core.getInput('min-versions-to-keep')) : null
+        const minVersionsToKeep = core.getInput('min-versions-to-keep')
         const versionToDelete = core.getInput('version-to-delete')
 
         // if both minVersionsToKeep and versionToDelete are null, stop the execution
