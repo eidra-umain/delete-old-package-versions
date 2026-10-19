@@ -1,7 +1,6 @@
-const core = require('@actions/core')
-const github = require('@actions/github')
-const octokitCore = require('@octokit/core')
-const paginate = require('@octokit/plugin-paginate-rest')
+import * as core from '@actions/core'
+import * as github from '@actions/github'
+
 async function run() {
     try {
         // get all required input parameters
@@ -27,8 +26,7 @@ async function run() {
         }
 
         // initialize github octokit api
-        const MyOctokit = octokitCore.Octokit.plugin(paginate.paginateRest);
-        const octokit = new MyOctokit({ auth: token });
+        const octokit = github.getOctokit(token);
 
         // get github context information
         const owner = github.context.repo.owner
