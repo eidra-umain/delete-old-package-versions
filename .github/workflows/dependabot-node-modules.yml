@@ -1,0 +1,50 @@
+# The action runs straight from the committed node_modules, but Dependabot only
+# updates package.json and package-lock.json. This refreshes node_modules on
+# Dependabot npm PRs and pushes the result back to the PR branch.
+name: Refresh node_modules on Dependabot PRs
+
+on:
+  pull_request:
+    paths:
+      - package.json
+      - package-lock.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.head_ref }}
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      # --ignore-scripts: never run dependency install scripts with a write token
+      - run: npm ci --omit=dev --ignore-scripts
+
+      # Commits as Dependabot so it keeps rebasing/updating the PR instead of
+      # treating the branch as edited by someone else. Pushes made with
+      # GITHUB_TOKEN don't trigger another workflow run, so this can't loop.
+      - name: Commit refreshed node_modules
+        run: |
+          git add -A node_modules
+          if git diff --cached --quiet; then
+            echo "node_modules already up to date"
+            exit 0
+          fi
+          git -c user.name="dependabot[bot]" \
+              -c user.email="49699333+dependabot[bot]@users.noreply.github.com" \
+              commit -m "chore: refresh node_modules"
+          git push
